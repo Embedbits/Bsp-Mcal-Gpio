@@ -32,6 +32,23 @@ add_library(Gpio_Lib STATIC ${Gpio_LibSrcs})
 # Specify the public headers for the library
 set_target_properties( Gpio_Lib PROPERTIES PUBLIC_HEADER "${Gpio_PublicHeaders}" )
 
+# Directory for public headers (build interface)
+set(PUBLIC_HEADERS_DIR ${CMAKE_CURRENT_BINARY_DIR}/PublicHeaders)
+
+file(MAKE_DIRECTORY ${PUBLIC_HEADERS_DIR})
+
+# Process all public headers
+foreach(PublicHeader IN LISTS Gpio_PublicHeaders)
+    
+    # Copy (or configure) only the public header there
+    configure_file(
+        ${CMAKE_CURRENT_SOURCE_DIR}/${PublicHeader} 
+        ${PUBLIC_HEADERS_DIR}/${PublicHeader}
+        COPYONLY
+    )
+    
+endforeach()
+
 
 # Include necessary libraries
 target_link_libraries( Gpio_Lib 
@@ -41,8 +58,11 @@ target_link_libraries( Gpio_Lib
 
 
 target_include_directories( Gpio_Lib 
-    INTERFACE 
-    ${Gpio_IncludeDirs}
+    PUBLIC
+        $<BUILD_INTERFACE:${PUBLIC_HEADERS_DIR}>
+        $<INSTALL_INTERFACE:include>
+    PRIVATE
+        ${Rcc_IncludeDirs}
 )
 
 

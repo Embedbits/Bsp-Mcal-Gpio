@@ -1,13 +1,9 @@
-/*
- *    Mr.Nobody, COPYRIGHT (c) 2021
- *    ALL RIGHTS RESERVED
- *
- */
-
 /**
+ * \author Mr.Nobody
  * \file Gpio.h
  * \ingroup Gpio
- * \brief Gpio module common functionality header file.
+ * \brief General-Purpose Input/Output (GPIO) peripheral handle module common
+ *        functionality header file.
  *
  * This file contains the common functionality used internally by the module,
  * and shall provide interface between the module and the application.

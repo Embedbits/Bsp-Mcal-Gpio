@@ -1,13 +1,9 @@
-/*
- *    Mr.Nobody, COPYRIGHT (c) 2021
- *    ALL RIGHTS RESERVED
- *
- */
-
 /**
+ * \author Mr.Nobody
  * \file Gpio.h
  * \ingroup Gpio
- * \brief Gpio module common functionality
+ * \brief General-Purpose Input/Output (GPIO) peripheral handler module common
+ *        functionality.
  *
  */
 /* ============================== INCLUDES ================================== */
