@@ -144,53 +144,33 @@ typedef enum
 {
 #if defined(GPIOA)
     GPIO_PORT_A = 0u, /**< GPIO Port A */
-#else
-    GPIO_PORT_A = GPIO_PORT_CNT,
 #endif
 #if defined(GPIOB)
     GPIO_PORT_B,      /**< GPIO Port B */
-#else
-    GPIO_PORT_B = GPIO_PORT_CNT,
 #endif
 #if defined(GPIOC)
     GPIO_PORT_C,      /**< GPIO Port C */
-#else
-    GPIO_PORT_C = GPIO_PORT_CNT,
 #endif
 #if defined(GPIOD)
     GPIO_PORT_D,      /**< GPIO Port D */
-#else
-    GPIO_PORT_D = GPIO_PORT_CNT,
 #endif
 #if defined(GPIOE)
     GPIO_PORT_E,      /**< GPIO Port E */
-#else
-    GPIO_PORT_E = GPIO_PORT_CNT,
 #endif
 #if defined(GPIOF)
     GPIO_PORT_F,      /**< GPIO Port F */
-#else
-    GPIO_PORT_F = GPIO_PORT_CNT,
 #endif
 #if defined(GPIOG)
     GPIO_PORT_G,      /**< GPIO Port G */
-#else
-    GPIO_PORT_G = GPIO_PORT_CNT,
 #endif
 #if defined(GPIOH)
     GPIO_PORT_H,      /**< GPIO Port H */
-#else
-    GPIO_PORT_H = GPIO_PORT_CNT,
 #endif
 #if defined(GPIOI)
     GPIO_PORT_I,      /**< GPIO Port I */
-#else
-    GPIO_PORT_I = GPIO_PORT_CNT,
 #endif
 #if defined(GPIOJ)
     GPIO_PORT_J,      /**< GPIO Port J */
-#else
-    GPIO_PORT_J = GPIO_PORT_CNT,
 #endif
     GPIO_PORT_CNT
 }   gpio_PortId_t;
