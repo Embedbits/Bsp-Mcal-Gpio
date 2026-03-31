@@ -1,13 +1,9 @@
-/*
- *    Mr.Nobody, COPYRIGHT (c) 2021
- *    ALL RIGHTS RESERVED
- *
- */
-
 /**
+ * \author Mr.Nobody
  * \file Gpio_Types.h
  * \ingroup Gpio
- * \brief Gpio module global types definition
+ * \brief General-Purpose Input/Output (GPIO) peripheral handle module global
+ *        types definition
  *
  * This file contains the types definitions used across the module and are 
  * available for other modules through Port file.
