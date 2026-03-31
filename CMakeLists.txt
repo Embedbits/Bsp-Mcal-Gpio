@@ -49,4 +49,6 @@ target_include_directories( Gpio_Lib
 message(STATUS "Gpio_Lib library created")
 
 #========================= Documentation configuration ========================#
-Doxygen_AddPath("${CMAKE_CURRENT_SOURCE_DIR}/")
+if(DOXYGEN_AVAILABLE STREQUAL "ON")
+    Doxygen_AddPath("${CMAKE_CURRENT_SOURCE_DIR}/")
+endif()
