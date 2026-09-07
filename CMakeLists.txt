@@ -25,6 +25,7 @@ set( Gpio_SourceFiles
 # List of public header files provided by the current library
 set( Gpio_PublicHeaders 
     Gpio_Port.h 
+	Gpio_Types.h
 )
 
 
