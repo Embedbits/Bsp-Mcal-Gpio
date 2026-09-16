@@ -172,6 +172,9 @@ typedef enum
 #if defined(GPIOJ)
     GPIO_PORT_J,      /**< GPIO Port J */
 #endif
+#if defined(GPIOK)
+    GPIO_PORT_K,      /**< GPIO Port K */
+#endif
     GPIO_PORT_CNT
 }   gpio_PortId_t;
 

@@ -88,6 +88,10 @@ static const gpio_PortConfig_t      gpio_PeriphConf[ GPIO_PORT_CNT ] =
 #if defined(GPIOJ)
     { .GpioReg = GPIOJ, .GpioRcc = RCC_PERIPH_GPIOJ },
 #endif
+#if defined(GPIOK)
+    { .GpioReg = GPIOK, .GpioRcc = RCC_PERIPH_GPIOK },
+#endif
+
 };
 
 

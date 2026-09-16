@@ -25,14 +25,14 @@ set( Gpio_SourceFiles
 # List of public header files provided by the current library
 set( Gpio_PublicHeaders 
     Gpio_Port.h 
-	Gpio_Types.h
+    Gpio_Types.h
 )
 
 
 # List of dependent libraries that are publicly used by the current library
 set( Gpio_PublicDependentLibs
     Ral_Lib
-Rcc_Lib 
+    Rcc_Lib 
 )
 
 
