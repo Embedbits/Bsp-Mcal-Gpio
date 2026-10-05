@@ -251,7 +251,7 @@ gpio_RequestState_t Gpio_Init( gpio_Config_t *gpioConfig )
  */
 void Gpio_Deinit( void )
 {
-
+    return;
 }
 
 
@@ -264,7 +264,7 @@ void Gpio_Deinit( void )
  */
 void Gpio_Task( void )
 {
-
+    return;
 }
 
 

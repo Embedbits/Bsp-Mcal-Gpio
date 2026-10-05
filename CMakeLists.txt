@@ -18,13 +18,13 @@ set( Gpio_PrivateIncludeDirs
 
 # Source files list for current library generation
 set( Gpio_SourceFiles
-    Gpio.c 
+    Gpio.c
 )
 
 
 # List of public header files provided by the current library
 set( Gpio_PublicHeaders 
-    Gpio_Port.h 
+    Gpio_Port.h
     Gpio_Types.h
 )
 
@@ -32,13 +32,13 @@ set( Gpio_PublicHeaders
 # List of dependent libraries that are publicly used by the current library
 set( Gpio_PublicDependentLibs
     Ral_Lib
-    Rcc_Lib 
+    Rcc_Lib
 )
 
 
 # List of dependent libraries that are privately used by the current library
 set( Gpio_PrivateDependentLibs
-     
+    
 )
 
 
@@ -80,10 +80,9 @@ target_include_directories( Gpio_Lib
     PUBLIC
         $<BUILD_INTERFACE:${PUBLIC_HEADERS_DIR}>
         $<INSTALL_INTERFACE:include>
-        Gpio_PublicIncludeDirs
+        ${Gpio_PublicIncludeDirs}
     PRIVATE
-        ${Gpio_IncludeDirs}
-        Gpio_PrivateIncludeDirs
+        ${Gpio_PrivateIncludeDirs}
 )
 
 

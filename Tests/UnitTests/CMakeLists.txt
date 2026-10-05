@@ -13,5 +13,9 @@ UnitTesting_Add_Test(
     MOCK_HEADERS    ${MCAL_DIR}/Rcc/Rcc_Port.h
     INCLUDE_DIRS    ${GPIO_DIR}
                     ${MCAL_DIR}/Rcc
-    LINK_LIBS       Ral_Lib
+    LINK_LIBS       ut_RegMem                           # Registers in host memory
+                    ut_CmsisHost                        # CMSIS core intrinsics on host
+    FORCE_INCLUDES  ${UNIT_TESTING_CMSIS_HOST_HEADER}   # Replaces cmsis_gcc.h
+    HOST_LIBS       Ral_Lib                             # ST LL compiled for host
+    COVERAGE_EXCLUDE ".*/Ral/.*"
 )

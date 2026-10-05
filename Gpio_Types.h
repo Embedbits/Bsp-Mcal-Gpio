@@ -1,4 +1,9 @@
 /**
+ * \defgroup Gpio Gpio
+ * \brief Gpio module
+ */
+
+/**
  * \author Mr.Nobody
  * \file Gpio_Types.h
  * \ingroup Gpio
