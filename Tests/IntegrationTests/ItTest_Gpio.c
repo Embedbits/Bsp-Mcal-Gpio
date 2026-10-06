@@ -31,7 +31,11 @@ static void It_Gpio_Check_PinLevel  ( gpio_PortId_t portId, gpio_PinId_t pinId, 
 /* ========================= SYMBOLIC CONSTANTS ============================= */
 
 /*----------------------------- Board configuration --------------------------*/
-#if defined(IT_BOARD_STM32F4DISCOVERY)
+/* Boards are named by their MCU (IT_BOARD_<MCU>, name of the board from the detection) */
+#if defined(IT_BOARD_STM32F405xG) || \
+    defined(IT_BOARD_STM32F407xG) || \
+    defined(IT_BOARD_STM32F415xG) || \
+    defined(IT_BOARD_STM32F417xG)
 
     /** User LED LD4 green (PD12) */
     #define IT_GPIO_LED_PORT                ( GPIO_PORT_D )
@@ -41,7 +45,9 @@ static void It_Gpio_Check_PinLevel  ( gpio_PortId_t portId, gpio_PinId_t pinId, 
     #define IT_GPIO_FREE_PORT               ( GPIO_PORT_E )
     #define IT_GPIO_FREE_PIN                ( GPIO_PIN_ID_7 )
 
-#elif defined(IT_BOARD_NUCLEO_F401RE) || defined(IT_BOARD_NUCLEO_F411RE) || defined(IT_BOARD_NUCLEO_F446RE)
+#elif defined(IT_BOARD_STM32F401xE) || \
+      defined(IT_BOARD_STM32F411xE) || \
+      defined(IT_BOARD_STM32F446xE)
 
     /** User LED LD2 (PA5) */
     #define IT_GPIO_LED_PORT                ( GPIO_PORT_A )
