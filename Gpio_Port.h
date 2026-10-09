@@ -2,7 +2,8 @@
  * \author Mr.Nobody
  * \file Gpio_Port.h
  * \ingroup Gpio
- * \brief Gpio module public functionality
+ * \brief General-Purpose Input/Output (GPIO) peripheral handle module public
+ *        functionality
  *
  * This file contains all available public functionality, any other files shall 
  * not used outside of the module.

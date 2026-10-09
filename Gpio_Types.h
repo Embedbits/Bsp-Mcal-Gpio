@@ -1,8 +1,14 @@
 /**
+ * \defgroup Gpio Gpio
+ * \brief Gpio module
+ */
+
+/**
  * \author Mr.Nobody
  * \file Gpio_Types.h
  * \ingroup Gpio
- * \brief Gpio module global types definition
+ * \brief General-Purpose Input/Output (GPIO) peripheral handle module global
+ *        types definition
  *
  * This file contains the types definitions used across the module and are 
  * available for other modules through Port file.
@@ -52,20 +58,20 @@ typedef enum
 }   gpio_FunctionState_t;
 
 
-/** Enumeration used to signal request processing state */
-typedef enum
-{
-    GPIO_REQUEST_ERROR = 0u, /**< Processing request failed  */
-    GPIO_REQUEST_OK          /**< Processing request succeed */
-}   gpio_RequestState_t;
-
-
 /** Flag states enumeration */
 typedef enum
 {
     GPIO_FLAG_INACTIVE = 0u, /**< Inactive flag state */
     GPIO_FLAG_ACTIVE         /**< Active flag state   */
 }   gpio_FlagState_t;
+
+
+/** Enumeration used to signal request processing state */
+typedef enum
+{
+    GPIO_REQUEST_ERROR = 0u, /**< Processing request failed  */
+    GPIO_REQUEST_OK          /**< Processing request succeed */
+}   gpio_RequestState_t;
 
 
 /** Enumeration type used to signal pin logical level */
@@ -132,7 +138,13 @@ typedef enum
 }   gpio_AltFunction_t;
 
 
-/** GPIO peripheral identification enumeration */
+/** \brief GPIO peripheral identification enumeration.
+ *
+ * \note If the specific GPIO port is not available on the selected
+ *       micro-controller, the corresponding enumeration constant is
+ *       mapped to GPIO_PORT_CNT value to avoid errors in other MCAL modules
+ *       that could use this enumeration.
+ */
 typedef enum
 {
 #if defined(GPIOA)
@@ -164,6 +176,9 @@ typedef enum
 #endif
 #if defined(GPIOJ)
     GPIO_PORT_J,      /**< GPIO Port J */
+#endif
+#if defined(GPIOK)
+    GPIO_PORT_K,      /**< GPIO Port K */
 #endif
     GPIO_PORT_CNT
 }   gpio_PortId_t;

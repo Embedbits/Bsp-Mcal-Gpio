@@ -24,15 +24,15 @@ set( Gpio_SourceFiles
 
 # List of public header files provided by the current library
 set( Gpio_PublicHeaders 
-    Gpio_Port.h
-    Gpio_Types.h  
+    Gpio_Port.h 
+    Gpio_Types.h
 )
 
 
 # List of dependent libraries that are publicly used by the current library
 set( Gpio_PublicDependentLibs
     Ral_Lib
-Rcc_Lib 
+    Rcc_Lib 
 )
 
 
@@ -80,10 +80,9 @@ target_include_directories( Gpio_Lib
     PUBLIC
         $<BUILD_INTERFACE:${PUBLIC_HEADERS_DIR}>
         $<INSTALL_INTERFACE:include>
-        Gpio_PublicIncludeDirs
+        ${Gpio_PublicIncludeDirs}
     PRIVATE
-        ${Gpio_IncludeDirs}
-        Gpio_PrivateIncludeDirs
+        ${Gpio_PrivateIncludeDirs}
 )
 
 
@@ -93,4 +92,14 @@ message(STATUS "Gpio_Lib library created")
 #========================= Documentation configuration ========================#
 if(DOXYGEN_AVAILABLE STREQUAL "ON")
     Doxygen_AddPath("${CMAKE_CURRENT_SOURCE_DIR}/")
+endif()
+
+#========================= Unit tests configuration ===========================#
+if(UNIT_TESTING_AVAILABLE STREQUAL "ON")
+    UnitTesting_AddPath("${CMAKE_CURRENT_SOURCE_DIR}/Tests/UnitTests")
+endif()
+
+#===================== Integration tests configuration ========================#
+if(INTEGRATION_TESTING_AVAILABLE STREQUAL "ON")
+    IntegrationTesting_AddPath("${CMAKE_CURRENT_SOURCE_DIR}/Tests/IntegrationTests")
 endif()
