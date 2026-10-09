@@ -434,6 +434,222 @@ void Ut_Gpio_Set_PinPull_Down_WritesPupdr( void )
     TEST_ASSERT_EQUAL_HEX32( LL_GPIO_PULL_DOWN, TEST_GPIO_FIELD2( GPIOA->PUPDR, GPIO_PIN_ID_1 ) );
 }
 
+/**
+ * \brief   Gpio_Get_PinSpeed() decodes OSPEEDR field of the pin.
+ *
+ * \details Presets high speed of PD5 in OSPEEDR and reads pin speed, then reads
+ *          the pin 6 with reset value.
+ *
+ * \par Expected results
+ * - GPIO_REQUEST_OK, speed of pin 5 is GPIO_PIN_SPEED_HIGH, of pin 6 GPIO_PIN_SPEED_LOW.
+ */
+void Ut_Gpio_Get_PinSpeed_ReadsOspeedr( void )
+{
+    gpio_PinSpeed_t pinSpeed = GPIO_PIN_SPEED_VERY_HIGH;
+
+    GPIOD->OSPEEDR = ( LL_GPIO_SPEED_FREQ_HIGH << ( TEST_GPIO_FIELD2_WIDTH * (uint32_t)GPIO_PIN_ID_5 ) );
+
+    TEST_ASSERT_EQUAL( GPIO_REQUEST_OK, Gpio_Get_PinSpeed( GPIO_PORT_D, GPIO_PIN_ID_5, &pinSpeed ) );
+    TEST_ASSERT_EQUAL( GPIO_PIN_SPEED_HIGH, pinSpeed );
+
+    TEST_ASSERT_EQUAL( GPIO_REQUEST_OK, Gpio_Get_PinSpeed( GPIO_PORT_D, GPIO_PIN_ID_6, &pinSpeed ) );
+    TEST_ASSERT_EQUAL( GPIO_PIN_SPEED_LOW, pinSpeed );
+}
+
+
+/**
+ * \brief   Gpio_Get_PinSpeed() rejects invalid arguments.
+ *
+ * \details Calls the function with invalid port, invalid pin and NULL pointer.
+ *
+ * \par Expected results
+ * - GPIO_REQUEST_ERROR is returned in every case, the output is not written.
+ */
+void Ut_Gpio_Get_PinSpeed_InvalidArgs_ReturnsError( void )
+{
+    gpio_PinSpeed_t pinSpeed = GPIO_PIN_SPEED_MEDIUM;
+
+    TEST_ASSERT_EQUAL( GPIO_REQUEST_ERROR, Gpio_Get_PinSpeed( GPIO_PORT_CNT, GPIO_PIN_ID_0,   &pinSpeed ) );
+    TEST_ASSERT_EQUAL( GPIO_REQUEST_ERROR, Gpio_Get_PinSpeed( GPIO_PORT_A,   GPIO_PIN_ID_CNT, &pinSpeed ) );
+    TEST_ASSERT_EQUAL( GPIO_REQUEST_ERROR, Gpio_Get_PinSpeed( GPIO_PORT_A,   GPIO_PIN_ID_0,   NULL      ) );
+
+    TEST_ASSERT_EQUAL( GPIO_PIN_SPEED_MEDIUM, pinSpeed );
+}
+
+
+/**
+ * \brief   Gpio_Get_PinOutType() decodes OTYPER bit of the pin.
+ *
+ * \details Presets open-drain output type of PC9 in OTYPER and reads the type of
+ *          pin 9 and of pin 8.
+ *
+ * \par Expected results
+ * - GPIO_REQUEST_OK, pin 9 is GPIO_PIN_OUTPUT_OPENDRAIN, pin 8 GPIO_PIN_OUTPUT_PUSHPULL.
+ */
+void Ut_Gpio_Get_PinOutType_ReadsOtyper( void )
+{
+    gpio_PinOutputType_t outType = GPIO_PIN_OUTPUT_PUSHPULL;
+
+    GPIOC->OTYPER = TEST_GPIO_PIN_MASK( GPIO_PIN_ID_9 );
+
+    TEST_ASSERT_EQUAL( GPIO_REQUEST_OK, Gpio_Get_PinOutType( GPIO_PORT_C, GPIO_PIN_ID_9, &outType ) );
+    TEST_ASSERT_EQUAL( GPIO_PIN_OUTPUT_OPENDRAIN, outType );
+
+    TEST_ASSERT_EQUAL( GPIO_REQUEST_OK, Gpio_Get_PinOutType( GPIO_PORT_C, GPIO_PIN_ID_8, &outType ) );
+    TEST_ASSERT_EQUAL( GPIO_PIN_OUTPUT_PUSHPULL, outType );
+}
+
+
+/**
+ * \brief   Gpio_Get_PinOutType() rejects invalid arguments.
+ *
+ * \details Calls the function with invalid port, invalid pin and NULL pointer.
+ *
+ * \par Expected results
+ * - GPIO_REQUEST_ERROR is returned in every case, the output is not written.
+ */
+void Ut_Gpio_Get_PinOutType_InvalidArgs_ReturnsError( void )
+{
+    gpio_PinOutputType_t outType = GPIO_PIN_OUTPUT_OPENDRAIN;
+
+    TEST_ASSERT_EQUAL( GPIO_REQUEST_ERROR, Gpio_Get_PinOutType( GPIO_PORT_CNT, GPIO_PIN_ID_0,   &outType ) );
+    TEST_ASSERT_EQUAL( GPIO_REQUEST_ERROR, Gpio_Get_PinOutType( GPIO_PORT_A,   GPIO_PIN_ID_CNT, &outType ) );
+    TEST_ASSERT_EQUAL( GPIO_REQUEST_ERROR, Gpio_Get_PinOutType( GPIO_PORT_A,   GPIO_PIN_ID_0,   NULL     ) );
+
+    TEST_ASSERT_EQUAL( GPIO_PIN_OUTPUT_OPENDRAIN, outType );
+}
+
+
+/**
+ * \brief   Gpio_Get_PinPull() decodes PUPDR field of the pin.
+ *
+ * \details Presets pull-up of PB2 and pull-down of PB3 in PUPDR and reads the pull
+ *          configuration of pins 2, 3 and 4.
+ *
+ * \par Expected results
+ * - GPIO_REQUEST_OK, pin 2 is GPIO_PIN_PULL_UP, pin 3 GPIO_PIN_PULL_DOWN, pin 4 GPIO_PIN_PULL_NONE.
+ */
+void Ut_Gpio_Get_PinPull_ReadsPupdr( void )
+{
+    gpio_PinPullCfg_t pull = GPIO_PIN_PULL_NONE;
+
+    GPIOB->PUPDR = ( LL_GPIO_PULL_UP   << ( TEST_GPIO_FIELD2_WIDTH * (uint32_t)GPIO_PIN_ID_2 ) ) |
+                   ( LL_GPIO_PULL_DOWN << ( TEST_GPIO_FIELD2_WIDTH * (uint32_t)GPIO_PIN_ID_3 ) );
+
+    TEST_ASSERT_EQUAL( GPIO_REQUEST_OK, Gpio_Get_PinPull( GPIO_PORT_B, GPIO_PIN_ID_2, &pull ) );
+    TEST_ASSERT_EQUAL( GPIO_PIN_PULL_UP, pull );
+
+    TEST_ASSERT_EQUAL( GPIO_REQUEST_OK, Gpio_Get_PinPull( GPIO_PORT_B, GPIO_PIN_ID_3, &pull ) );
+    TEST_ASSERT_EQUAL( GPIO_PIN_PULL_DOWN, pull );
+
+    TEST_ASSERT_EQUAL( GPIO_REQUEST_OK, Gpio_Get_PinPull( GPIO_PORT_B, GPIO_PIN_ID_4, &pull ) );
+    TEST_ASSERT_EQUAL( GPIO_PIN_PULL_NONE, pull );
+}
+
+
+/**
+ * \brief   Gpio_Get_PinPull() rejects invalid arguments.
+ *
+ * \details Calls the function with invalid port, invalid pin and NULL pointer.
+ *
+ * \par Expected results
+ * - GPIO_REQUEST_ERROR is returned in every case, the output is not written.
+ */
+void Ut_Gpio_Get_PinPull_InvalidArgs_ReturnsError( void )
+{
+    gpio_PinPullCfg_t pull = GPIO_PIN_PULL_UP;
+
+    TEST_ASSERT_EQUAL( GPIO_REQUEST_ERROR, Gpio_Get_PinPull( GPIO_PORT_CNT, GPIO_PIN_ID_0,   &pull ) );
+    TEST_ASSERT_EQUAL( GPIO_REQUEST_ERROR, Gpio_Get_PinPull( GPIO_PORT_A,   GPIO_PIN_ID_CNT, &pull ) );
+    TEST_ASSERT_EQUAL( GPIO_REQUEST_ERROR, Gpio_Get_PinPull( GPIO_PORT_A,   GPIO_PIN_ID_0,   NULL  ) );
+
+    TEST_ASSERT_EQUAL( GPIO_PIN_PULL_UP, pull );
+}
+
+
+/**
+ * \brief   Gpio_Get_PortState() reports the clock state of the port from RCC.
+ *
+ * \details RCC mock reports active GPIOC clock, then inactive GPIOD clock.
+ *
+ * \par Expected results
+ * - GPIO_REQUEST_OK, state of port C is GPIO_FUNCTION_ACTIVE, of port D GPIO_FUNCTION_INACTIVE.
+ */
+void Ut_Gpio_Get_PortState_ClockState_ReportedFromRcc( void )
+{
+    rcc_FunctionState_t  rccActive   = RCC_FUNCTION_ACTIVE;
+    rcc_FunctionState_t  rccInactive = RCC_FUNCTION_INACTIVE;
+    gpio_FunctionState_t portState   = GPIO_FUNCTION_INACTIVE;
+
+    Rcc_Get_PeriphState_ExpectAndReturn( RCC_PERIPH_GPIOC, NULL, RCC_REQUEST_OK );
+    Rcc_Get_PeriphState_IgnoreArg_funcState();
+    Rcc_Get_PeriphState_ReturnThruPtr_funcState( &rccActive );
+
+    TEST_ASSERT_EQUAL( GPIO_REQUEST_OK, Gpio_Get_PortState( GPIO_PORT_C, &portState ) );
+    TEST_ASSERT_EQUAL( GPIO_FUNCTION_ACTIVE, portState );
+
+    Rcc_Get_PeriphState_ExpectAndReturn( RCC_PERIPH_GPIOD, NULL, RCC_REQUEST_OK );
+    Rcc_Get_PeriphState_IgnoreArg_funcState();
+    Rcc_Get_PeriphState_ReturnThruPtr_funcState( &rccInactive );
+
+    TEST_ASSERT_EQUAL( GPIO_REQUEST_OK, Gpio_Get_PortState( GPIO_PORT_D, &portState ) );
+    TEST_ASSERT_EQUAL( GPIO_FUNCTION_INACTIVE, portState );
+}
+
+
+/**
+ * \brief   Gpio_Get_PortState() reports error of the clock state read.
+ *
+ * \details Rcc_Get_PeriphState() returns error.
+ *
+ * \par Expected results
+ * - GPIO_REQUEST_ERROR is returned.
+ */
+void Ut_Gpio_Get_PortState_RccError_ReturnsError( void )
+{
+    gpio_FunctionState_t portState = GPIO_FUNCTION_INACTIVE;
+
+    Rcc_Get_PeriphState_ExpectAndReturn( RCC_PERIPH_GPIOA, NULL, RCC_REQUEST_ERROR );
+    Rcc_Get_PeriphState_IgnoreArg_funcState();
+
+    TEST_ASSERT_EQUAL( GPIO_REQUEST_ERROR, Gpio_Get_PortState( GPIO_PORT_A, &portState ) );
+}
+
+
+/**
+ * \brief   Gpio_Get_PortState() rejects invalid port.
+ *
+ * \details Calls Gpio_Get_PortState( GPIO_PORT_CNT ).
+ *
+ * \par Expected results
+ * - GPIO_REQUEST_ERROR is returned, RCC is not called (strict mock).
+ */
+void Ut_Gpio_Get_PortState_InvalidPort_ReturnsErrorWithoutRccAccess( void )
+{
+    gpio_FunctionState_t portState = GPIO_FUNCTION_ACTIVE;
+
+    TEST_ASSERT_EQUAL( GPIO_REQUEST_ERROR, Gpio_Get_PortState( GPIO_PORT_CNT, &portState ) );
+}
+
+
+/**
+ * \brief   Gpio_Deinit() and Gpio_Task() leave the registers untouched.
+ *
+ * \details Calls both functions and reads the port registers.
+ *
+ * \par Expected results
+ * - GPIOA registers keep the reset value, RCC is not called (strict mock).
+ */
+void Ut_Gpio_DeinitAndTask_NoRegisterAccess( void )
+{
+    Gpio_Deinit();
+    Gpio_Task();
+
+    TEST_ASSERT_EQUAL_HEX32( 0u, GPIOA->MODER );
+    TEST_ASSERT_EQUAL_HEX32( 0u, GPIOA->ODR );
+}
+
+
 /* ============================== PIN LEVEL ================================= */
 
 /**
