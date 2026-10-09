@@ -27,6 +27,17 @@ Each branch represents a different STM32 MCU family, and switching between famil
 
 ---
 
+## STM32L4 / STM32L4+ specifics
+- Ports A - I exist depending on the device line (enumerators guarded by device header).  
+- STM32L47x / L48x: analog mode connects the pin to the ADC by the analog switch (GPIOx_ASCR). The
+  switch is closed after the analog mode is written and opened before any other mode is written
+  (read-back verified). Other lines have no ASCR - the step is skipped.  
+- Port G: PG[15:2] are supplied by VDDIO2 - the supply is validated by Rcc when the port clock is
+  enabled (PWR_CR2 IOSV).  
+- Public interface (Gpio_Port.h, Gpio_Types.h) is identical with STM32H5.  
+
+---
+
 ## Public API
 
 ### Module Management
