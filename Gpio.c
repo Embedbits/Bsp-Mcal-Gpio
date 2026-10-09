@@ -88,6 +88,10 @@ static const gpio_PortConfig_t      gpio_PeriphConf[ GPIO_PORT_CNT ] =
 #if defined(GPIOJ)
     { .GpioReg = GPIOJ, .GpioRcc = RCC_PERIPH_GPIOJ },
 #endif
+#if defined(GPIOK)
+    { .GpioReg = GPIOK, .GpioRcc = RCC_PERIPH_GPIOK },
+#endif
+
 };
 
 
@@ -154,10 +158,15 @@ gpio_ModuleVersion_t Gpio_Get_ModuleVersion( void )
 /**
  * \brief Initializes module Gpio
  *
- * This function shall call every necessary sub-module initialization function 
- * and set up all the necessary resources for the module to work. In case of
- * failure, the function shall handle it by itself and shall not be transferred
- * to AppMain layer.
+ * Activates the port clock and configures the pin. Output level (inactive state),
+ * output type, speed, pull and alternate function are configured before the pin
+ * mode, so an output pin starts directly with its inactive level (no glitch).
+ * Configuration stops at the first failed step.
+ *
+ * \param gpioConfig [in]: GPIO pin configuration. Must not be NULL.
+ *
+ * \return State of request execution. Returns \ref GPIO_REQUEST_OK if request was
+ *         success, otherwise returns \ref GPIO_REQUEST_ERROR.
  */
 gpio_RequestState_t Gpio_Init( gpio_Config_t *gpioConfig )
 {
@@ -166,45 +175,60 @@ gpio_RequestState_t Gpio_Init( gpio_Config_t *gpioConfig )
     if( GPIO_NULL_PTR != gpioConfig )
     {
         retState = Gpio_Set_PortActive( gpioConfig->PortId );
-        if( GPIO_REQUEST_ERROR == retState )
+
+        if( GPIO_REQUEST_OK == retState )
         {
-            return ( retState );
+            retState = Gpio_Set_PinStateInactive( gpioConfig->PortId, gpioConfig->PinId, gpioConfig->PinActiveLevel );
+        }
+        else
+        {
+            /* Port activation failed */
         }
 
-        retState = Gpio_Set_PinMode( gpioConfig->PortId, gpioConfig->PinId, gpioConfig->PinMode );
-        if( GPIO_REQUEST_ERROR == retState )
+        if( GPIO_REQUEST_OK == retState )
         {
-            return ( retState );
+            retState = Gpio_Set_PinOutType( gpioConfig->PortId, gpioConfig->PinId, gpioConfig->PinOutType );
+        }
+        else
+        {
+            /* Error during initialization process */
         }
 
-        retState = Gpio_Set_PinSpeed( gpioConfig->PortId, gpioConfig->PinId, gpioConfig->PinSpeed );
-        if( GPIO_REQUEST_ERROR == retState )
+        if( GPIO_REQUEST_OK == retState )
         {
-            return ( retState );
+            retState = Gpio_Set_PinSpeed( gpioConfig->PortId, gpioConfig->PinId, gpioConfig->PinSpeed );
+        }
+        else
+        {
+            /* Error during initialization process */
         }
 
-        retState = Gpio_Set_PinOutType( gpioConfig->PortId, gpioConfig->PinId, gpioConfig->PinOutType );
-        if( GPIO_REQUEST_ERROR == retState )
+        if( GPIO_REQUEST_OK == retState )
         {
-            return ( retState );
+            retState = Gpio_Set_PinPull( gpioConfig->PortId, gpioConfig->PinId, gpioConfig->PinPull );
+        }
+        else
+        {
+            /* Error during initialization process */
         }
 
-        retState = Gpio_Set_PinAltFunction( gpioConfig->PortId, gpioConfig->PinId, gpioConfig->PinAltFunction );
-        if( GPIO_REQUEST_ERROR == retState )
+        if( GPIO_REQUEST_OK == retState )
         {
-            return ( retState );
+            retState = Gpio_Set_PinAltFunction( gpioConfig->PortId, gpioConfig->PinId, gpioConfig->PinAltFunction );
+        }
+        else
+        {
+            /* Error during initialization process */
         }
 
-        retState = Gpio_Set_PinPull( gpioConfig->PortId, gpioConfig->PinId, gpioConfig->PinPull );
-        if( GPIO_REQUEST_ERROR == retState )
+        /* Pin mode is configured as the last step */
+        if( GPIO_REQUEST_OK == retState )
         {
-            return ( retState );
+            retState = Gpio_Set_PinMode( gpioConfig->PortId, gpioConfig->PinId, gpioConfig->PinMode );
         }
-
-        retState = Gpio_Set_PinStateInactive( gpioConfig->PortId, gpioConfig->PinId, gpioConfig->PinActiveLevel );
-        if( GPIO_REQUEST_ERROR == retState )
+        else
         {
-            return ( retState );
+            /* Error during initialization process */
         }
     }
     else
@@ -227,7 +251,7 @@ gpio_RequestState_t Gpio_Init( gpio_Config_t *gpioConfig )
  */
 void Gpio_Deinit( void )
 {
-
+    return;
 }
 
 
@@ -240,7 +264,7 @@ void Gpio_Deinit( void )
  */
 void Gpio_Task( void )
 {
-
+    return;
 }
 
 
@@ -389,8 +413,9 @@ gpio_RequestState_t Gpio_Set_PinMode(gpio_PortId_t portId, gpio_PinId_t pinId, g
     gpio_RequestState_t retValue = GPIO_REQUEST_ERROR;
     uint32_t            regValue = 0u;
 
-    if( ( GPIO_PORT_CNT   > portId ) &&
-        ( GPIO_PIN_ID_CNT > pinId  )    )
+    if( ( GPIO_PORT_CNT         > portId  ) &&
+        ( GPIO_PIN_ID_CNT       > pinId   ) &&
+        ( GPIO_PIN_MODE_ANALOG >= pinType )    )
     {
         LL_GPIO_SetPinMode( gpio_PeriphConf[ portId ].GpioReg, gpio_PinConf[ pinId ].PinRegId, pinType );
 
@@ -463,8 +488,9 @@ gpio_RequestState_t Gpio_Set_PinSpeed(gpio_PortId_t portId, gpio_PinId_t pinId, 
     gpio_RequestState_t retValue = GPIO_REQUEST_ERROR;
     uint32_t            regValue = 0u;
 
-    if( ( GPIO_PORT_CNT   > portId ) &&
-        ( GPIO_PIN_ID_CNT > pinId  )    )
+    if( ( GPIO_PORT_CNT             > portId   ) &&
+        ( GPIO_PIN_ID_CNT           > pinId    ) &&
+        ( GPIO_PIN_SPEED_VERY_HIGH >= pinSpeed )    )
     {
         LL_GPIO_SetPinSpeed( gpio_PeriphConf[ portId ].GpioReg, gpio_PinConf[ pinId ].PinRegId, pinSpeed );
 
@@ -537,8 +563,9 @@ gpio_RequestState_t Gpio_Set_PinOutType(gpio_PortId_t portId, gpio_PinId_t pinId
     gpio_RequestState_t retValue = GPIO_REQUEST_ERROR;
     uint32_t            regValue = 0u;
 
-    if( ( GPIO_PORT_CNT   > portId ) &&
-        ( GPIO_PIN_ID_CNT > pinId  )    )
+    if( ( GPIO_PORT_CNT              > portId     ) &&
+        ( GPIO_PIN_ID_CNT            > pinId      ) &&
+        ( GPIO_PIN_OUTPUT_OPENDRAIN >= pinOutType )    )
     {
         LL_GPIO_SetPinOutputType( gpio_PeriphConf[ portId ].GpioReg, gpio_PinConf[ pinId ].PinRegId, pinOutType );
 
@@ -707,8 +734,9 @@ gpio_RequestState_t Gpio_Set_PinPull( gpio_PortId_t portId, gpio_PinId_t pinId, 
     gpio_RequestState_t retValue = GPIO_REQUEST_ERROR;
     uint32_t            regValue = 0u;
 
-    if( ( GPIO_PORT_CNT   > portId ) &&
-        ( GPIO_PIN_ID_CNT > pinId  )    )
+    if( ( GPIO_PORT_CNT       > portId  ) &&
+        ( GPIO_PIN_ID_CNT     > pinId   ) &&
+        ( GPIO_PIN_PULL_DOWN >= pullCfg )    )
     {
         LL_GPIO_SetPinPull( gpio_PeriphConf[ portId ].GpioReg, gpio_PinConf[ pinId ].PinRegId, pullCfg );
 
@@ -798,9 +826,12 @@ gpio_RequestState_t Gpio_Toggle_PinLevel(gpio_PortId_t portId, gpio_PinId_t pinI
 /**
  * \brief Configures pin output level [high/low]
  *
+ * Output data register is written atomically (BSRR / BRR) and verified by
+ * read-back. Level is applied on the pin only if the pin is configured as output.
+ *
  * \param portId   [in]: GPIO port identification [GPIOA.GPIOB...]
  * \param pinId    [in]: GPIO pin identification [Pin0,Pin1...]
- * \param pinLevel [in]: Required pin output state [high/low]
+ * \param pinLevel [in]: Required pin output state, value from \ref gpio_PinLevel_t
  * \return State of request execution. Returns "OK" if request was success,
  *         otherwise return error.
  */
@@ -808,19 +839,44 @@ gpio_RequestState_t Gpio_Set_PinLevel(gpio_PortId_t portId, gpio_PinId_t pinId, 
 {
     gpio_RequestState_t retValue = GPIO_REQUEST_ERROR;
 
-    if( ( GPIO_PORT_CNT   > portId ) &&
-        ( GPIO_PIN_ID_CNT > pinId  )    )
+    if( ( GPIO_PORT_CNT        > portId   ) &&
+        ( GPIO_PIN_ID_CNT      > pinId    ) &&
+        ( GPIO_PIN_LEVEL_HIGH >= pinLevel )    )
     {
-        if( GPIO_PIN_LEVEL_LOW != pinLevel )
-        {
-            LL_GPIO_ResetOutputPin( gpio_PeriphConf[ portId ].GpioReg, gpio_PinConf[ pinId ].PinRegId );
-        }
-        else
+        if( GPIO_PIN_LEVEL_HIGH == pinLevel )
         {
             LL_GPIO_SetOutputPin( gpio_PeriphConf[ portId ].GpioReg, gpio_PinConf[ pinId ].PinRegId );
         }
+        else
+        {
+            LL_GPIO_ResetOutputPin( gpio_PeriphConf[ portId ].GpioReg, gpio_PinConf[ pinId ].PinRegId );
+        }
 
-        retValue = GPIO_REQUEST_OK;
+        for( uint32_t iterationCnt = 0u; GPIO_TIMEOUT_RAW > iterationCnt; iterationCnt ++ )
+        {
+            const uint32_t  regValue    = LL_GPIO_IsOutputPinSet( gpio_PeriphConf[ portId ].GpioReg, gpio_PinConf[ pinId ].PinRegId );
+            gpio_PinLevel_t actualLevel = GPIO_PIN_LEVEL_LOW;
+
+            if( 0u != regValue )
+            {
+                actualLevel = GPIO_PIN_LEVEL_HIGH;
+            }
+            else
+            {
+                actualLevel = GPIO_PIN_LEVEL_LOW;
+            }
+
+            if( pinLevel == actualLevel )
+            {
+                retValue = GPIO_REQUEST_OK;
+                break;
+            }
+            else
+            {
+                /* Register value has not been correctly configured yet */
+                retValue = GPIO_REQUEST_ERROR;
+            }
+        }
     }
     else
     {
@@ -834,9 +890,11 @@ gpio_RequestState_t Gpio_Set_PinLevel(gpio_PortId_t portId, gpio_PinId_t pinId, 
 /**
  * \brief Returns pin output level [high/low]
  *
+ * \note  Level is read from input data register (actual level on the pin).
+ *
  * \param portId    [in]: GPIO port identification [GPIOA.GPIOB...]
  * \param pinId     [in]: GPIO pin identification [Pin0,Pin1...]
- * \param pinLevel [out]: Required pin output state [high/low]
+ * \param pinLevel [out]: Pointer to store actual pin level. Must not be NULL.
  * \return State of request execution. Returns "OK" if request was success,
  *         otherwise return error.
  */
@@ -844,8 +902,9 @@ gpio_RequestState_t Gpio_Get_PinLevel(gpio_PortId_t portId, gpio_PinId_t pinId, 
 {
     gpio_RequestState_t retValue = GPIO_REQUEST_ERROR;
 
-    if( ( GPIO_PORT_CNT   > portId ) &&
-        ( GPIO_PIN_ID_CNT > pinId  )    )
+    if( ( GPIO_PORT_CNT   > portId   ) &&
+        ( GPIO_PIN_ID_CNT > pinId    ) &&
+        ( GPIO_NULL_PTR  != pinLevel )    )
     {
         uint32_t regValue = LL_GPIO_IsInputPinSet( gpio_PeriphConf[ portId ].GpioReg, gpio_PinConf[ pinId ].PinRegId );
 
@@ -882,12 +941,11 @@ gpio_RequestState_t Gpio_Set_PinStateActive(gpio_PortId_t portId, gpio_PinId_t p
 {
     gpio_RequestState_t retValue = GPIO_REQUEST_ERROR;
 
-    if( ( GPIO_PORT_CNT   > portId ) &&
-        ( GPIO_PIN_ID_CNT > pinId  )    )
+    if( ( GPIO_PORT_CNT        > portId         ) &&
+        ( GPIO_PIN_ID_CNT      > pinId          ) &&
+        ( GPIO_PIN_LEVEL_HIGH >= pinActiveLevel )    )
     {
-        Gpio_Set_PinLevel( portId, pinId, pinActiveLevel );
-
-        retValue = GPIO_REQUEST_OK;
+        retValue = Gpio_Set_PinLevel( portId, pinId, pinActiveLevel );
     }
     else
     {
@@ -901,9 +959,11 @@ gpio_RequestState_t Gpio_Set_PinStateActive(gpio_PortId_t portId, gpio_PinId_t p
 /**
  * \brief Sets pin inactive level
  *
+ * Pin is driven to the opposite of its active level.
+ *
  * \param portId         [in]: GPIO port identification [GPIOA.GPIOB...]
  * \param pinId          [in]: GPIO pin identification [Pin0,Pin1...]
- * \param pinActiveLevel [in]: Output level in active state [high/low]
+ * \param pinActiveLevel [in]: Output level in active state, value from \ref gpio_PinLevel_t
  * \return State of request execution. Returns "OK" if request was success,
  *         otherwise return error.
  */
@@ -911,21 +971,18 @@ gpio_RequestState_t Gpio_Set_PinStateInactive(gpio_PortId_t portId, gpio_PinId_t
 {
     gpio_RequestState_t retValue = GPIO_REQUEST_ERROR;
 
-    if( ( GPIO_PORT_CNT   > portId ) &&
-        ( GPIO_PIN_ID_CNT > pinId  )    )
+    if( ( GPIO_PORT_CNT        > portId         ) &&
+        ( GPIO_PIN_ID_CNT      > pinId          ) &&
+        ( GPIO_PIN_LEVEL_HIGH >= pinActiveLevel )    )
     {
-        Gpio_Set_PinLevel( portId, pinId, pinActiveLevel );
-
-        if( GPIO_PIN_LEVEL_LOW != pinActiveLevel )
+        if( GPIO_PIN_LEVEL_HIGH == pinActiveLevel )
         {
-            Gpio_Set_PinLevel( portId, pinId, GPIO_PIN_LEVEL_LOW );
+            retValue = Gpio_Set_PinLevel( portId, pinId, GPIO_PIN_LEVEL_LOW );
         }
         else
         {
-            Gpio_Set_PinLevel( portId, pinId, GPIO_PIN_LEVEL_HIGH );
+            retValue = Gpio_Set_PinLevel( portId, pinId, GPIO_PIN_LEVEL_HIGH );
         }
-
-        retValue = GPIO_REQUEST_OK;
     }
     else
     {
