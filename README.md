@@ -7,6 +7,10 @@ It offers unified APIs to manage pin direction, mode, speed, pull resistors, alt
 This module is shared across all branches.  
 Each branch represents a different STM32 MCU family, and switching between families is done by checking out the corresponding branch.  
 
+The STM32H7 branch covers all STM32H7 lines incl. STM32H7R3 / H7R7 / H7S3 / H7S7 (Ral family STM32H7RS, ports A - H
+and M - P). The pin is reset through the upper half of BSRR, on STM32H7R / H7S through BRR (LL_GPIO_ResetOutputPin()
+of the line).  
+
 ---
 
 ## Features
