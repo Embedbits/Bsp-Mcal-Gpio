@@ -83,6 +83,12 @@ gpio_RequestState_t Gpio_Set_PinStateInactive(gpio_PortId_t portId, gpio_PinId_t
 
 ---
 
+## Integration Tests
+
+`Tests/IntegrationTests` run on a board (EmBi_Platform `CMake/IntegrationTesting`). The tests use the LED of the board and one free pin that is neither connected on the board nor a wire of the board fixtures (pull resistor tests need a floating pin): NUCLEO-F411RE / NUCLEO-F446RE LED PA5 and pin PB15, NUCLEO-F413ZH LED PB0 and pin PE7 (PA8 is wired to PB8 in the I2C loop with a pull-up, so it is not used any more).
+
+---
+
 ## 🛠 CMake Integration
 
 1. Include `Gpio_Lib` in your CMake library.
