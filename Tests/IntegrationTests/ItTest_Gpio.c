@@ -12,8 +12,9 @@
  * Used pins (see board configuration below):
  * - IT_GPIO_LED_*  - user LED of the board (push-pull output with load, LED blinks)
  * - IT_GPIO_FREE_* - pin not connected on the board (no LED, pull resistor or
- *                    solder bridge) and on connectors. Pull resistor tests
- *                    require floating pin.
+ *                    solder bridge), on connectors and not a pin of the wires of the common
+ *                    board wiring (SPI, I2C, UART, TIM pairs, ADC dividers). Pull resistor
+ *                    tests require floating pin.
  */
 
 /* ============================= INCLUDES =================================== */
@@ -24,9 +25,9 @@
 
 /* ======================= FORWARD DECLARATIONS ============================= */
 
-static void It_Gpio_WaitPinSettled  ( void );
-static void It_Gpio_Set_PinDefault  ( gpio_PortId_t portId, gpio_PinId_t pinId );
-static void It_Gpio_Check_PinLevel  ( gpio_PortId_t portId, gpio_PinId_t pinId, gpio_PinLevel_t expectedLevel );
+static void ItGpio_WaitPinSettled   ( void );
+static void ItGpio_Set_PinDefault   ( gpio_PortId_t portId, gpio_PinId_t pinId );
+static void ItGpio_Check_PinLevel   ( gpio_PortId_t portId, gpio_PinId_t pinId, gpio_PinLevel_t expectedLevel );
 
 /* ========================= SYMBOLIC CONSTANTS ============================= */
 
@@ -34,7 +35,8 @@ static void It_Gpio_Check_PinLevel  ( gpio_PortId_t portId, gpio_PinId_t pinId, 
 /* Boards are named by their MCU (IT_BOARD_<MCU>, name of the board from the detection), MCUs
  * with the same DEV_ID and flash size share the block. Board MB1367:
  * NUCLEO-G474RE - DEV_ID 0x469, 512 KB flash (STM32G471xE / G473xE / G474xE / G483xE / G484xE)
- * NUCLEO-G431RB - DEV_ID 0x468, 128 KB flash (STM32G411xB / G431xB / G441xB) */
+ * NUCLEO-G431RB - DEV_ID 0x468, 128 KB flash (STM32G411xB / G431xB / G441xB)
+ * NUCLEO-G491RE - DEV_ID 0x479, 512 KB flash (STM32G491xE / G4A1xE) */
 #if defined(IT_BOARD_STM32G471xE) || \
     defined(IT_BOARD_STM32G473xE) || \
     defined(IT_BOARD_STM32G474xE) || \
@@ -42,13 +44,16 @@ static void It_Gpio_Check_PinLevel  ( gpio_PortId_t portId, gpio_PinId_t pinId, 
     defined(IT_BOARD_STM32G484xE) || \
     defined(IT_BOARD_STM32G411xB) || \
     defined(IT_BOARD_STM32G431xB) || \
-    defined(IT_BOARD_STM32G441xB)
+    defined(IT_BOARD_STM32G441xB) || \
+    defined(IT_BOARD_STM32G491xE) || \
+    defined(IT_BOARD_STM32G4A1xE)
 
-    /** User LED LD2 (PA5, Arduino D13) */
+    /** LED LD2 (PA5, Arduino D13) - also SCK of the SPI1 -> SPI2 wire (PA5 - PB13); the input PB13 does not
+     *  influence the output level */
     #define IT_GPIO_LED_PORT                ( GPIO_PORT_A )
     #define IT_GPIO_LED_PIN                 ( GPIO_PIN_ID_5 )
 
-    /** Arduino D7 (PA8) - not connected on the board */
+    /** Arduino D7 (PA8) - not connected on the board, none of the wires of the common board wiring */
     #define IT_GPIO_FREE_PORT               ( GPIO_PORT_A )
     #define IT_GPIO_FREE_PIN                ( GPIO_PIN_ID_8 )
 
@@ -74,8 +79,8 @@ void setUp( void )
 
 void tearDown( void )
 {
-    It_Gpio_Set_PinDefault( IT_GPIO_LED_PORT,  IT_GPIO_LED_PIN  );
-    It_Gpio_Set_PinDefault( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN );
+    ItGpio_Set_PinDefault( IT_GPIO_LED_PORT,  IT_GPIO_LED_PIN  );
+    ItGpio_Set_PinDefault( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN );
 }
 
 /* =============================== TESTS ==================================== */
@@ -161,7 +166,7 @@ void It_Gpio_Init_OutputConfiguration_AllParametersReadBack( void )
     TEST_ASSERT_EQUAL( GPIO_ALT_FUNC_7, altFunc );
 
     /* Pin is initialized in inactive state - open drain released, pulled down */
-    It_Gpio_Check_PinLevel( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_LEVEL_LOW );
+    ItGpio_Check_PinLevel( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_LEVEL_LOW );
 }
 
 /*--------------------------- Push-pull output -------------------------------*/
@@ -180,7 +185,7 @@ void It_Gpio_Set_PinLevel_PushPullHigh_PinReadsHigh( void )
     TEST_ASSERT_EQUAL( GPIO_REQUEST_OK, Gpio_Set_PinLevel( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_LEVEL_HIGH ) );
     TEST_ASSERT_EQUAL( GPIO_REQUEST_OK, Gpio_Set_PinMode( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_MODE_OUTPUT ) );
 
-    It_Gpio_Check_PinLevel( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_LEVEL_HIGH );
+    ItGpio_Check_PinLevel( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_LEVEL_HIGH );
 }
 
 
@@ -198,7 +203,7 @@ void It_Gpio_Set_PinLevel_PushPullLow_PinReadsLow( void )
     TEST_ASSERT_EQUAL( GPIO_REQUEST_OK, Gpio_Set_PinLevel( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_LEVEL_LOW ) );
     TEST_ASSERT_EQUAL( GPIO_REQUEST_OK, Gpio_Set_PinMode( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_MODE_OUTPUT ) );
 
-    It_Gpio_Check_PinLevel( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_LEVEL_LOW );
+    ItGpio_Check_PinLevel( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_LEVEL_LOW );
 }
 
 
@@ -215,10 +220,10 @@ void It_Gpio_Set_PinLevel_LedHighAndLow_PinFollowsLevel( void )
     TEST_ASSERT_EQUAL( GPIO_REQUEST_OK, Gpio_Set_PinMode( IT_GPIO_LED_PORT, IT_GPIO_LED_PIN, GPIO_PIN_MODE_OUTPUT ) );
 
     TEST_ASSERT_EQUAL( GPIO_REQUEST_OK, Gpio_Set_PinLevel( IT_GPIO_LED_PORT, IT_GPIO_LED_PIN, GPIO_PIN_LEVEL_HIGH ) );
-    It_Gpio_Check_PinLevel( IT_GPIO_LED_PORT, IT_GPIO_LED_PIN, GPIO_PIN_LEVEL_HIGH );
+    ItGpio_Check_PinLevel( IT_GPIO_LED_PORT, IT_GPIO_LED_PIN, GPIO_PIN_LEVEL_HIGH );
 
     TEST_ASSERT_EQUAL( GPIO_REQUEST_OK, Gpio_Set_PinLevel( IT_GPIO_LED_PORT, IT_GPIO_LED_PIN, GPIO_PIN_LEVEL_LOW ) );
-    It_Gpio_Check_PinLevel( IT_GPIO_LED_PORT, IT_GPIO_LED_PIN, GPIO_PIN_LEVEL_LOW );
+    ItGpio_Check_PinLevel( IT_GPIO_LED_PORT, IT_GPIO_LED_PIN, GPIO_PIN_LEVEL_LOW );
 }
 
 
@@ -236,10 +241,10 @@ void It_Gpio_Toggle_PinLevel_PushPull_PinLevelInverted( void )
     TEST_ASSERT_EQUAL( GPIO_REQUEST_OK, Gpio_Set_PinMode( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_MODE_OUTPUT ) );
 
     TEST_ASSERT_EQUAL( GPIO_REQUEST_OK, Gpio_Toggle_PinLevel( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN ) );
-    It_Gpio_Check_PinLevel( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_LEVEL_HIGH );
+    ItGpio_Check_PinLevel( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_LEVEL_HIGH );
 
     TEST_ASSERT_EQUAL( GPIO_REQUEST_OK, Gpio_Toggle_PinLevel( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN ) );
-    It_Gpio_Check_PinLevel( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_LEVEL_LOW );
+    ItGpio_Check_PinLevel( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_LEVEL_LOW );
 }
 
 
@@ -257,10 +262,10 @@ void It_Gpio_Set_PinStateActive_ActiveLow_PinReadsLow( void )
     TEST_ASSERT_EQUAL( GPIO_REQUEST_OK, Gpio_Set_PinMode( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_MODE_OUTPUT ) );
 
     TEST_ASSERT_EQUAL( GPIO_REQUEST_OK, Gpio_Set_PinStateInactive( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_LEVEL_LOW ) );
-    It_Gpio_Check_PinLevel( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_LEVEL_HIGH );
+    ItGpio_Check_PinLevel( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_LEVEL_HIGH );
 
     TEST_ASSERT_EQUAL( GPIO_REQUEST_OK, Gpio_Set_PinStateActive( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_LEVEL_LOW ) );
-    It_Gpio_Check_PinLevel( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_LEVEL_LOW );
+    ItGpio_Check_PinLevel( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_LEVEL_LOW );
 }
 
 /*--------------------------- Pull resistors ---------------------------------*/
@@ -278,7 +283,7 @@ void It_Gpio_Set_PinPull_InputPullUp_PinReadsHigh( void )
     TEST_ASSERT_EQUAL( GPIO_REQUEST_OK, Gpio_Set_PinMode( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_MODE_INPUT ) );
     TEST_ASSERT_EQUAL( GPIO_REQUEST_OK, Gpio_Set_PinPull( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_PULL_UP ) );
 
-    It_Gpio_Check_PinLevel( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_LEVEL_HIGH );
+    ItGpio_Check_PinLevel( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_LEVEL_HIGH );
 }
 
 
@@ -295,7 +300,7 @@ void It_Gpio_Set_PinPull_InputPullDown_PinReadsLow( void )
     TEST_ASSERT_EQUAL( GPIO_REQUEST_OK, Gpio_Set_PinMode( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_MODE_INPUT ) );
     TEST_ASSERT_EQUAL( GPIO_REQUEST_OK, Gpio_Set_PinPull( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_PULL_DOWN ) );
 
-    It_Gpio_Check_PinLevel( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_LEVEL_LOW );
+    ItGpio_Check_PinLevel( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_LEVEL_LOW );
 }
 
 
@@ -312,10 +317,10 @@ void It_Gpio_Set_PinPull_PullUpToPullDown_PinLevelFollows( void )
     TEST_ASSERT_EQUAL( GPIO_REQUEST_OK, Gpio_Set_PinMode( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_MODE_INPUT ) );
 
     TEST_ASSERT_EQUAL( GPIO_REQUEST_OK, Gpio_Set_PinPull( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_PULL_UP ) );
-    It_Gpio_Check_PinLevel( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_LEVEL_HIGH );
+    ItGpio_Check_PinLevel( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_LEVEL_HIGH );
 
     TEST_ASSERT_EQUAL( GPIO_REQUEST_OK, Gpio_Set_PinPull( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_PULL_DOWN ) );
-    It_Gpio_Check_PinLevel( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_LEVEL_LOW );
+    ItGpio_Check_PinLevel( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_LEVEL_LOW );
 }
 
 /*--------------------------- Open-drain output ------------------------------*/
@@ -335,7 +340,7 @@ void It_Gpio_Set_PinOutType_OpenDrainHighPullUp_PinReadsHigh( void )
     TEST_ASSERT_EQUAL( GPIO_REQUEST_OK, Gpio_Set_PinLevel( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_LEVEL_HIGH ) );
     TEST_ASSERT_EQUAL( GPIO_REQUEST_OK, Gpio_Set_PinMode( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_MODE_OUTPUT ) );
 
-    It_Gpio_Check_PinLevel( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_LEVEL_HIGH );
+    ItGpio_Check_PinLevel( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_LEVEL_HIGH );
 }
 
 
@@ -355,7 +360,7 @@ void It_Gpio_Set_PinOutType_OpenDrainHighPullDown_PinReleasedReadsLow( void )
     TEST_ASSERT_EQUAL( GPIO_REQUEST_OK, Gpio_Set_PinMode( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_MODE_OUTPUT ) );
 
     /* Open drain does not drive high level - pin is pulled down */
-    It_Gpio_Check_PinLevel( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_LEVEL_LOW );
+    ItGpio_Check_PinLevel( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_LEVEL_LOW );
 }
 
 
@@ -374,7 +379,7 @@ void It_Gpio_Set_PinOutType_OpenDrainLowPullUp_PinDrivenLow( void )
     TEST_ASSERT_EQUAL( GPIO_REQUEST_OK, Gpio_Set_PinLevel( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_LEVEL_LOW ) );
     TEST_ASSERT_EQUAL( GPIO_REQUEST_OK, Gpio_Set_PinMode( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_MODE_OUTPUT ) );
 
-    It_Gpio_Check_PinLevel( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_LEVEL_LOW );
+    ItGpio_Check_PinLevel( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_LEVEL_LOW );
 }
 
 /*----------------------- Analog and alternate mode --------------------------*/
@@ -392,11 +397,11 @@ void It_Gpio_Set_PinMode_AnalogWithPullUp_InputReadsLow( void )
 {
     TEST_ASSERT_EQUAL( GPIO_REQUEST_OK, Gpio_Set_PinMode( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_MODE_INPUT ) );
     TEST_ASSERT_EQUAL( GPIO_REQUEST_OK, Gpio_Set_PinPull( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_PULL_UP ) );
-    It_Gpio_Check_PinLevel( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_LEVEL_HIGH );
+    ItGpio_Check_PinLevel( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_LEVEL_HIGH );
 
     /* Schmitt trigger input is disabled in analog mode, input data register reads 0 */
     TEST_ASSERT_EQUAL( GPIO_REQUEST_OK, Gpio_Set_PinMode( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_MODE_ANALOG ) );
-    It_Gpio_Check_PinLevel( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_LEVEL_LOW );
+    ItGpio_Check_PinLevel( IT_GPIO_FREE_PORT, IT_GPIO_FREE_PIN, GPIO_PIN_LEVEL_LOW );
 }
 
 
@@ -432,7 +437,7 @@ void It_Gpio_Set_PinAltFunction_AllFunctions_ReadBack( void )
  * \note Input data register is sampled by AHB clock (2 cycles delay), pull
  *       resistor charges pin capacity - both are far below the wait time.
  */
-static void It_Gpio_WaitPinSettled( void )
+static void ItGpio_WaitPinSettled( void )
 {
     for( volatile uint32_t loopIdx = 0u; IT_GPIO_SETTLE_LOOPS > loopIdx; loopIdx++ )
     {
@@ -449,7 +454,7 @@ static void It_Gpio_WaitPinSettled( void )
  * \param portId [in]: GPIO port identification
  * \param pinId  [in]: GPIO pin identification
  */
-static void It_Gpio_Set_PinDefault( gpio_PortId_t portId, gpio_PinId_t pinId )
+static void ItGpio_Set_PinDefault( gpio_PortId_t portId, gpio_PinId_t pinId )
 {
     TEST_ASSERT_EQUAL( GPIO_REQUEST_OK, Gpio_Set_PinMode    ( portId, pinId, GPIO_PIN_MODE_ANALOG     ) );
     TEST_ASSERT_EQUAL( GPIO_REQUEST_OK, Gpio_Set_PinPull    ( portId, pinId, GPIO_PIN_PULL_NONE       ) );
@@ -467,11 +472,11 @@ static void It_Gpio_Set_PinDefault( gpio_PortId_t portId, gpio_PinId_t pinId )
  * \param pinId         [in]: GPIO pin identification
  * \param expectedLevel [in]: Expected pin level
  */
-static void It_Gpio_Check_PinLevel( gpio_PortId_t portId, gpio_PinId_t pinId, gpio_PinLevel_t expectedLevel )
+static void ItGpio_Check_PinLevel( gpio_PortId_t portId, gpio_PinId_t pinId, gpio_PinLevel_t expectedLevel )
 {
     gpio_PinLevel_t pinLevel = GPIO_PIN_LEVEL_LOW;
 
-    It_Gpio_WaitPinSettled();
+    ItGpio_WaitPinSettled();
 
     TEST_ASSERT_EQUAL( GPIO_REQUEST_OK, Gpio_Get_PinLevel( portId, pinId, &pinLevel ) );
     TEST_ASSERT_EQUAL( expectedLevel, pinLevel );
